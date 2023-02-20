@@ -15,7 +15,7 @@
 function returnFirstArgument(name) {
     return name
 }
-
+returnFirstArgument('привет')
 /*
  Задание 2:
 
@@ -78,8 +78,8 @@ function returnCounter(number) {
  Пример:
    returnArgumentsArray(1, 2, 3) вернет [1, 2, 3]
  */
-function returnArgumentsArray() {
-
+function returnArgumentsArray(...value) {
+    return value
 }
 
 /*
