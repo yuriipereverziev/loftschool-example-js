@@ -6,8 +6,17 @@
  Напишите аналог встроенного метода forEach для работы с массивами
  Посмотрите как работает forEach и повторите это поведение для массива, который будет передан в параметре array
  */
+
+// forEach([1, 2, 3], (el) => console.log(el))
+import {push} from "karma/lib/init/log-queue";
+
 function forEach(array, fn) {
+    for (let i = 0; i < array.length; i++) {
+        fn(array[i], i, array)
+    }
 }
+
+forEach([1, 2, 3], (el) => console.log(el))
 
 /*
  Задание 2:
@@ -16,7 +25,15 @@ function forEach(array, fn) {
  Посмотрите как работает map и повторите это поведение для массива, который будет передан в параметре array
  */
 function map(array, fn) {
+    const mod = []
+    for (let i = 0; i < array.length; i++) {
+        mod[i] = fn(array[i], i, array)
+    }
+
+    return mod
 }
+
+map([1, 2, 3], (el) => el ** 2)
 
 /*
  Задание 3:
@@ -25,6 +42,14 @@ function map(array, fn) {
  Посмотрите как работает reduce и повторите это поведение для массива, который будет передан в параметре array
  */
 function reduce(array, fn, initial) {
+    const hasInitial = typeof initial !== 'undefined';
+    let prev = hasInitial ? initial : array[0];
+
+    for (let i = hasInitial ? 0 : 1; i < array.length; i++) {
+        prev = fn(prev, array[i], i, array)
+    }
+
+    return prev
 }
 
 /*
@@ -36,6 +61,13 @@ function reduce(array, fn, initial) {
    upperProps({ name: 'Сергей', lastName: 'Петров' }) вернет ['NAME', 'LASTNAME']
  */
 function upperProps(obj) {
+    const props = []
+
+    for (const name in obj) {
+        props.push(name.toUpperCase())
+    }
+
+    return props
 }
 
 /*
