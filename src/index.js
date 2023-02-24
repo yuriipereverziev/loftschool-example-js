@@ -84,7 +84,22 @@ function isSomeTrue(array, fn) {
  3.3: Необходимо выбрасывать исключение в случаях:
    - fn не является функцией (с текстом "fn is not a function")
  */
-function returnBadArguments(fn) {
+function returnBadArguments(fn, ...args) {
+    if (typeof fn !== 'function') {
+        throw new Error('fn is not a function')
+    }
+
+    const bad = []
+
+    for (const arg of args) {
+        try {
+            fn(arg)
+        } catch {
+            bad.push(args)
+        }
+    }
+
+    return bad
 }
 
 /*
@@ -104,7 +119,45 @@ function returnBadArguments(fn) {
    - number не является числом (с текстом "number is not a number")
    - какой-либо из аргументов div является нулем (с текстом "division by 0")
  */
-function calculator() {
+function calculator(number = 0) {
+    if (!Number.isFinite(number)) {
+        throw new Error('number is not a number')
+    }
+    return {
+        sum(...args) {
+            let result = number
+            for (const arg in args) {
+                result += arg
+            }
+
+            return result
+        },
+        dif(...args) {
+            let result = number
+            for (const arg in args) {
+                result -= arg
+            }
+            return result
+        },
+        div(...args) {
+
+            let result = number
+            for (const arg in args) {
+                if (arg === 0) {
+                    throw new Error('division by 0')
+                }
+                result /= arg
+            }
+            return result
+        },
+        mul(...args) {
+            let result = number
+            for (const arg in args) {
+                result *= arg
+            }
+            return result
+        },
+    }
 }
 
 /* При решении задач, пострайтесь использовать отладчик */
