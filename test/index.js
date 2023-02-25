@@ -1,177 +1,240 @@
-import { assert } from 'chai';
-import { randomNumberArray, randomStringArray, randomValue as random } from '../helper';
-import { calculator, isAllTrue, isSomeTrue, returnBadArguments } from '../src/index';
+import { randomValue } from '../../scripts/helper';
+import {
+    collectDOMStat,
+    createDivWithText,
+    deleteTextNodes,
+    deleteTextNodesRecursive,
+    findAllPSiblings,
+    findError,
+    observeChildNodes,
+    prepend,
+} from './index';
 
-describe('ДЗ 2 - работа с исключениями и отладчиком', () => {
-    describe('isAllTrue', () => {
-        it('должна вызывать fn для всех элементов массива', () => {
-            let array = random('array', 1);
-            let pass = [];
+function random(type) {
+    const result = randomValue(type);
 
-            isAllTrue(array, e => pass.push(e));
+    if (type === 'string') {
+        return encodeURIComponent(result);
+    }
 
-            assert.deepEqual(pass, array);
+    return result;
+}
+
+describe('ДЗ 4 - Работа с DOM', () => {
+    describe('createDivWithText', () => {
+        it('должна возвращать элемент с тегом DIV', () => {
+            const text = random('string');
+            const result = createDivWithText(text);
+
+            expect(result).toBeInstanceOf(Element);
+            expect(result.tagName).toBe('DIV');
         });
 
-        it('должна вернуть true, если fn вернула true для всех элементов массива', () => {
-            let array = randomNumberArray();
-            let result = isAllTrue(array, Number.isFinite);
+        it('должна добавлять текст в элемент', () => {
+            const text = random('string');
+            const result = createDivWithText(text);
 
-            assert.isTrue(result);
-        });
-
-        it('должна вернуть false, если fn вернула false хотя бы для одного элемента массива', () => {
-            let array = randomNumberArray();
-
-            array.push(random('string'));
-            let result = isAllTrue(array, Number.isFinite);
-
-            assert.isFalse(result);
-        });
-
-        it('должна выбросить исключение, если передан пустой массив', () => {
-            assert.throws(isAllTrue.bind(null, [], () => {
-            }), 'empty array');
-        });
-
-        it('должна выбросить исключение, если передан не массив', () => {
-            assert.throws(isAllTrue.bind(null,':(', () => {
-            }), 'empty array');
-            assert.throws(isAllTrue.bind(null, {}, () => {
-            }), 'empty array');
-        });
-
-        it('должна выбросить исключение, если fn не функция', () => {
-            let array = randomNumberArray();
-
-            assert.throws(isAllTrue.bind(null, array, ':('), 'fn is not a function');
+            expect(result.textContent).toBe(text);
         });
     });
 
-    describe('isSomeTrue', () => {
-        it('должна вернуть true, если fn вернула true хотя бы для одного элемента массива', () => {
-            let array = randomStringArray().concat(random('number'));
-            let result = isSomeTrue(array, Number.isFinite);
+    describe('prepend', () => {
+        it('должна добавлять элемент в начало', () => {
+            const where = document.createElement('div');
+            const what = document.createElement('p');
+            const whereText = random('string');
+            const whatText = random('string');
 
-            assert.isTrue(result);
-        });
+            where.innerHTML = `, <b>${whereText}</b>!`;
+            what.textContent = whatText;
 
-        it('должна вернуть false, если fn не вернула true хотя бы для одного элемента массива', () => {
-            let array = randomStringArray();
-            let result = isSomeTrue(array, Number.isFinite);
+            prepend(what, where);
 
-            assert.isFalse(result);
-        });
-
-        it('должна выбросить исключение, если передан пустой массив', () => {
-            assert.throws(isSomeTrue.bind(null, [], () => {
-            }), 'empty array');
-        });
-
-        it('должна выбросить исключение, если передан не массив', () => {
-            assert.throws(isSomeTrue.bind(null, ':(', () => {
-            }), 'empty array');
-            assert.throws(isSomeTrue.bind(null, {}), 'empty array');
-        });
-
-        it('должна выбросить исключение, если fn не функция', () => {
-            let array = randomNumberArray();
-
-            assert.throws(isSomeTrue.bind(null, array, ':('), 'fn is not a function');
+            expect(where.firstChild).toBe(what);
+            expect(where.innerHTML).toBe(`<p>${whatText}</p>, <b>${whereText}</b>!`);
         });
     });
 
-    describe('returnBadArguments', () => {
-        it('должна вызывать fn для всех элементов массива', () => {
-            let array = random('array', 1);
-            let pass = [];
+    describe('findAllPSiblings', () => {
+        it('должна возвращать массив с элементами, соседями которых являются P', () => {
+            const where = document.createElement('div');
 
-            returnBadArguments(e => pass.push(e), ...array);
+            where.innerHTML = '<div></div><p></p><span></span><span></span><p></p>';
+            const result = findAllPSiblings(where);
 
-            assert.deepEqual(pass, array);
+            expect(Array.isArray(result));
+            expect(result).toEqual([where.children[0], where.children[3]]);
         });
+    });
 
-        it('должна вернуть массив с аргументами, для которых fn выбрасила исключение', () => {
-            let evenNumbers = randomNumberArray('even');
-            let oddNumbers = randomNumberArray('odd');
-            let fn = a => {
-                if (a % 2 != 0) {
-                    throw new Error('not even');
-                }
+    describe('findError', () => {
+        it('должна возвращать массив из текстового содержимого элементов', () => {
+            const where = document.createElement('div');
+            const text1 = random('string');
+            const text2 = random('string');
+
+            where.innerHTML = ` <div>${text1}</div>, <div>${text2}</div>!!!`;
+            const result = findError(where);
+
+            expect(Array.isArray(result));
+            expect(result).toEqual([text1, text2]);
+        });
+    });
+
+    describe('deleteTextNodes', () => {
+        it('должна удалить все текстовые узлы', () => {
+            const where = document.createElement('div');
+
+            where.innerHTML = ` <div></div>${random('string')}<p></p>${random('string')}`;
+            deleteTextNodes(where);
+
+            expect(where.innerHTML).toBe('<div></div><p></p>');
+        });
+    });
+
+    describe('deleteTextNodesRecursive', () => {
+        it('должна рекурсивно удалить все текстовые узлы', () => {
+            const where = document.createElement('div');
+            const text1 = random('string');
+            const text2 = random('string');
+            const text3 = random('string');
+
+            where.innerHTML = `<span> <div> <b>${text1}</b> </div> <p>${text2}</p> ${text3}</span>`;
+            deleteTextNodesRecursive(where);
+
+            expect(where.innerHTML).toBe('<span><div><b></b></div><p></p></span>');
+        });
+    });
+
+    describe('collectDOMStat', () => {
+        it('должна вернуть статистику по переданному дереву', () => {
+            const where = document.createElement('div');
+            const class1 = `class-${random('number')}`;
+            const class2 = `class-${random('number')}-${random('number')}`;
+            const text1 = random('string');
+            const text2 = random('string');
+            const stat = {
+                tags: { P: 1, B: 2 },
+                classes: { [class1]: 2, [class2]: 1 },
+                texts: 3,
             };
-            let result = returnBadArguments(fn, ...evenNumbers, ...oddNumbers);
 
-            assert.deepEqual(result, oddNumbers);
-        });
+            where.innerHTML = `<p class="${class1}"><b>${text1}</b> <b class="${class1} ${class2}">${text2}</b></p>`;
+            const result = collectDOMStat(where);
 
-        it('должна вернуть массив пустой массив, если не передано дополнительных аргументов', () => {
-            let fn = () => ':)';
-            let result = returnBadArguments(fn);
-
-            assert.deepEqual(result, []);
-        });
-
-        it('должна выбросить исключение, если fn не функция', () => {
-            assert.throws(returnBadArguments.bind(null, ':('), 'fn is not a function');
+            expect(result).toEqual(stat);
         });
     });
 
-    describe('calculator', () => {
-        it('должна возвращать объект с методами', () => {
-            let calc = calculator();
+    describe('observeChildNodes', () => {
+        it('должна вызывать fn при добавлении элементов в указанный элемент', (done) => {
+            const where = document.createElement('div');
+            const fn = (info) => {
+                expect(typeof info === 'object' && info && info.constructor === 'Object');
+                expect(info.type).toBe(targetInfo.type);
+                expect(Array.isArray(info.nodes));
+                expect(info.nodes.length).toBe(targetInfo.nodes.length);
+                expect(targetInfo.nodes).toEqual(info.nodes);
+                done();
+            };
+            const elementToInsert = document.createElement('div');
+            const targetInfo = {
+                type: 'insert',
+                nodes: [elementToInsert],
+            };
 
-            assert.includeMembers(Object.keys(calc), ['sum', 'dif', 'div', 'mul']);
+            document.body.appendChild(where);
+
+            observeChildNodes(where, fn);
+            where.appendChild(elementToInsert);
+
+            document.body.removeChild(where);
         });
 
-        it('метод sum должен складывать аргументы', () => {
-            let initialValue = random('number');
-            let calc = calculator(initialValue);
-            let args = randomNumberArray();
+        it('должна вызывать fn при добавлении множества элементов в указанный элемент', (done) => {
+            const where = document.createElement('div');
+            const fn = (info) => {
+                expect(typeof info === 'object' && info && info.constructor === 'Object');
+                expect(info.type).toBe(targetInfo.type);
+                expect(Array.isArray(info.nodes));
+                expect(info.nodes.length).toBe(targetInfo.nodes.length);
+                expect(targetInfo.nodes).toEqual(info.nodes);
+                done();
+            };
+            const elementToInsert1 = document.createElement('div');
+            const elementToInsert2 = document.createElement('div');
+            const elementToInsert3 = document.createElement('div');
+            const targetInfo = {
+                type: 'insert',
+                nodes: [elementToInsert1, elementToInsert2, elementToInsert3],
+            };
+            const fragment = new DocumentFragment();
 
-            assert.strictEqual(calc.sum(...args), args.reduce((prev, current) => prev + current, initialValue));
+            document.body.appendChild(where);
+
+            fragment.appendChild(elementToInsert1);
+            fragment.appendChild(elementToInsert2);
+            fragment.appendChild(elementToInsert3);
+
+            observeChildNodes(where, fn);
+            where.appendChild(fragment);
+
+            document.body.removeChild(where);
         });
 
-        it('метод dif должен вычитать аргументы', () => {
-            let initialValue = random('number');
-            let calc = calculator(initialValue);
-            let args = randomNumberArray();
+        it('должна вызывать fn при удалении элементов из указанного элемента', (done) => {
+            const where = document.createElement('div');
+            const fn = (info) => {
+                expect(typeof info === 'object' && info && info.constructor === 'Object');
+                expect(info.type).toBe(targetInfo.type);
+                expect(Array.isArray(info.nodes));
+                expect(info.nodes.length).toBe(targetInfo.nodes.length);
+                expect(targetInfo.nodes).toEqual(info.nodes);
+                done();
+            };
+            const elementToRemove = document.createElement('div');
+            const targetInfo = {
+                type: 'remove',
+                nodes: [elementToRemove],
+            };
 
-            assert.strictEqual(calc.dif(...args), args.reduce((prev, current) => prev - current, initialValue));
+            document.body.appendChild(where);
+
+            where.appendChild(elementToRemove);
+            observeChildNodes(where, fn);
+            where.removeChild(elementToRemove);
+
+            document.body.removeChild(where);
         });
 
-        it('метод div должен делить аргументы', () => {
-            let initialValue = random('number');
-            let calc = calculator(initialValue);
-            let args = randomNumberArray();
+        it('должна вызывать fn при удалении множества элементов из указанного элемента', (done) => {
+            const where = document.createElement('div');
+            const fn = (info) => {
+                expect(typeof info === 'object' && info && info.constructor === 'Object');
+                expect(info.type).toBe(targetInfo.type);
+                expect(Array.isArray(info.nodes));
+                expect(info.nodes.length).toBe(targetInfo.nodes.length);
+                expect(targetInfo.nodes).toEqual(info.nodes);
+                done();
+            };
+            const elementToRemove1 = document.createElement('div');
+            const elementToRemove2 = document.createElement('div');
+            const elementToRemove3 = document.createElement('div');
+            const targetInfo = {
+                type: 'remove',
+                nodes: [elementToRemove1, elementToRemove2, elementToRemove3],
+            };
 
-            assert.strictEqual(calc.div(...args), args.reduce((prev, current) => prev / current, initialValue));
-        });
+            document.body.appendChild(where);
 
-        it('метод div должен выбрасывать исключение, если хотя бы один из аргументов равен 0', () => {
-            let initialValue = random('number');
-            let calc = calculator(initialValue);
-            let args = [...randomNumberArray(), 0];
+            where.appendChild(elementToRemove1);
+            where.appendChild(elementToRemove2);
+            where.appendChild(elementToRemove3);
 
-            assert.throws(calc.div.bind(null, ...args), 'division by 0');
-        });
+            observeChildNodes(where, fn);
+            where.innerHTML = '';
 
-        it('метод mul должен умножать аргументы', () => {
-            let initialValue = random('number');
-            let calc = calculator(initialValue);
-            let args = randomNumberArray();
-
-            assert.strictEqual(calc.mul(...args), args.reduce((prev, current) => prev * current, initialValue));
-        });
-
-        it('функция должна выбрасывать исключение, если number не является числом', () => {
-            assert.throws(calculator.bind(null, ':('), 'number is not a number');
-        });
-
-        it('значение по умолчанию для аргумента number должно быть равно 0', () => {
-            let calc = calculator();
-            let args = randomNumberArray();
-
-            assert.strictEqual(calc.sum(...args), args.reduce((prev, current) => prev + current));
+            document.body.removeChild(where);
         });
     });
 });
