@@ -10,10 +10,13 @@
  Пример:
    createDivWithText('loftschool') // создаст элемент div, поместит в него 'loftschool' и вернет созданный элемент
  */
+
 function createDivWithText(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div;
+    let element = document.createElement('div')
+
+    element.textContent = text
+
+    return element
 }
 
 /*
@@ -25,8 +28,7 @@ function createDivWithText(text) {
    prepend(document.querySelector('#one'), document.querySelector('#two')) // добавит элемент переданный первым аргументом в начало элемента переданного вторым аргументом
  */
 function prepend(what, where) {
-    where.insertBefore(what, where.firstElementChild);
-    // where.prepend(what);
+    where.prepend(what)
 }
 
 /*
@@ -34,7 +36,7 @@ function prepend(what, where) {
 
  3.1: Функция должна перебрать все дочерние элементы узла, переданного в параметре where
 
- 3.2: Функция должна вернуть массив, состоящий из тех дочерних элементов следующим соседом которых является элемент с тегом P
+ 3.2: Функция должна вернуть массив, состоящий из тех дочерних элементов, следующим соседом которых является элемент с тегом P
 
  Пример:
    Представим, что есть разметка:
@@ -44,26 +46,26 @@ function prepend(what, where) {
       <a></a>
       <span></span>
       <p></p>
-   </body>
+   </dody>
 
    findAllPSiblings(document.body) // функция должна вернуть массив с элементами div и span т.к. следующим соседом этих элементов является элемент с тегом P
  */
 function findAllPSiblings(where) {
-    const nextP = [];
+    const elemP = []
 
-    for (const el of where.children) {
-        if (el.nextElementSibling && el.nextElementSibling.tagName === 'P') {
-            nextP.push(el);
+    for (const elem of where.children) {
+        if (elem.nextElementSibling && elem.nextElementSibling.tagName === 'p'){
+            elem.push(elemP)
         }
     }
 
-    return nextP;
+    return elemP
 }
 
 /*
  Задание 4:
 
- Функция представленная ниже, перебирает все дочерние узлы типа "элемент" внутри узла переданного в параметре where и возвращает массив из текстового содержимого найденных элементов
+ Функция представленная ниже, перебирает все дочерние узлы типа "элемент" внутри узла переданного в параметре where и возвращает массив из текстового содержимого найденных элементов.
  Но похоже, что в код функции закралась ошибка и она работает не так, как описано.
 
  Необходимо найти и исправить ошибку в коде так, чтобы функция работала так, как описано выше.
@@ -73,25 +75,15 @@ function findAllPSiblings(where) {
    <body>
       <div>привет</div>
       <div>loftschool</div>
-   </body>
+   </dody>
 
    findError(document.body) // функция должна вернуть массив с элементами 'привет' и 'loftschool'
  */
-
-/*function findError(where) {
-  const result = [];
-
-  for (const child of where.childNodes) {
-    result.push(child.textContent);
-  }
-
-  return result;
-}*/
 function findError(where) {
-    const result = [];
+    var result = [];
 
-    for (const child of where.children) {
-        result.push(child.textContent);
+    for (var child of where.childNodes) {
+        result.push(child.innerText);
     }
 
     return result;
@@ -111,10 +103,11 @@ function findError(where) {
  */
 function deleteTextNodes(where) {
     for (let i = 0; i < where.childNodes.length; i++) {
-        const el = where.childNodes[i];
+        const el = where.childNodes[i]
 
-        if (el.nodeType === Element.TEXT_NODE) {
-            where.removeChild(el);
+        if (el.nodeType === Element.TEXT_NODE){
+
+            where.removeChild(el)
             i--;
         }
     }
@@ -123,9 +116,9 @@ function deleteTextNodes(where) {
 /*
  Задание 6:
 
- Выполнить предыдущее задание с использование рекурсии - то есть необходимо заходить внутрь каждого дочернего элемента (углубляться в дерево)
+ Выполнить предудыщее задание с использование рекурсии - то есть необходимо заходить внутрь каждого дочернего элемента (углубляться в дерево)
 
- Будьте внимательны при удалении узлов, т.к. можно получить неожиданное поведение при переборе узлов
+ Так же будьте внимательны при удалении узлов, т.к. можно получить неожиданное поведение при переборе узлов
 
  Пример:
    После выполнения функции, дерево <span> <div> <b>привет</b> </div> <p>loftchool</p> !!!</span>
@@ -133,13 +126,14 @@ function deleteTextNodes(where) {
  */
 function deleteTextNodesRecursive(where) {
     for (let i = 0; i < where.childNodes.length; i++) {
-        const el = where.childNodes[i];
+        const el = where.childNodes[i]
 
-        if (el.nodeType === Element.TEXT_NODE) {
-            where.removeChild(el);
+        if (el.nodeType === Element.TEXT_NODE){
+
+            where.removeChild(el)
             i--;
-        } else if (el.nodeType === Element.ELEMENT_NODE) {
-            deleteTextNodesRecursive(el);
+        } else if (el.nodeType === Element.ELEMENT_NODE){
+            deleteTextNodesRecursive(el)
         }
     }
 }
@@ -165,39 +159,6 @@ function deleteTextNodesRecursive(where) {
    }
  */
 function collectDOMStat(root) {
-    const stat = {
-        tags: {},
-        classes: {},
-        texts: 0,
-    };
-
-    function scan(root) {
-        for (const child of root.childNodes) {
-            if (child.nodeType === Node.TEXT_NODE) {
-                stat.texts++;
-            } else if (child.nodeType === Node.ELEMENT_NODE) {
-                if (child.tagName in stat.tags) {
-                    stat.tags[child.tagName]++;
-                } else {
-                    stat.tags[child.tagName] = 1;
-                }
-
-                for (const className of child.classList) {
-                    if (className in stat.classes) {
-                        stat.classes[className]++;
-                    } else {
-                        stat.classes[className] = 1;
-                    }
-                }
-
-                scan(child);
-            }
-        }
-    }
-
-    scan(root);
-
-    return stat;
 }
 
 /*
@@ -233,20 +194,6 @@ function collectDOMStat(root) {
    }
  */
 function observeChildNodes(where, fn) {
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                fn({
-                    type: mutation.addedNodes.length ? 'insert' : 'remove',
-                    nodes: [
-                        ...(mutation.addedNodes.length ? mutation.addedNodes : mutation.removedNodes),
-                    ],
-                });
-            }
-        });
-    });
-
-    observer.observe(where, { childList: true, subtree: true });
 }
 
 export {
@@ -257,5 +204,5 @@ export {
     deleteTextNodes,
     deleteTextNodesRecursive,
     collectDOMStat,
-    observeChildNodes,
+    observeChildNodes
 };

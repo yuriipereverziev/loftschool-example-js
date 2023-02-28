@@ -1,19 +1,20 @@
-import { randomValue } from '../../scripts/helper';
+import { assert } from 'chai';
+import { randomValue } from '../helper';
 import {
-    collectDOMStat,
     createDivWithText,
-    deleteTextNodes,
-    deleteTextNodesRecursive,
+    prepend,
     findAllPSiblings,
     findError,
-    observeChildNodes,
-    prepend,
-} from './index';
+    deleteTextNodes,
+    deleteTextNodesRecursive,
+    collectDOMStat,
+    observeChildNodes
+} from '../src/index';
 
 function random(type) {
-    const result = randomValue(type);
+    let result = randomValue(type);
 
-    if (type === 'string') {
+    if (type == 'string') {
         return encodeURIComponent(result);
     }
 
@@ -23,124 +24,126 @@ function random(type) {
 describe('ДЗ 4 - Работа с DOM', () => {
     describe('createDivWithText', () => {
         it('должна возвращать элемент с тегом DIV', () => {
-            const text = random('string');
-            const result = createDivWithText(text);
+            let text = random('string');
+            let result = createDivWithText(text);
 
-            expect(result).toBeInstanceOf(Element);
-            expect(result.tagName).toBe('DIV');
+            assert.instanceOf(result, Element);
+            assert.equal(result.tagName, 'DIV');
         });
 
         it('должна добавлять текст в элемент', () => {
-            const text = random('string');
-            const result = createDivWithText(text);
+            let text = random('string');
+            let result = createDivWithText(text);
 
-            expect(result.textContent).toBe(text);
+            assert.equal(result.innerText, text);
         });
     });
 
     describe('prepend', () => {
         it('должна добавлять элемент в начало', () => {
-            const where = document.createElement('div');
-            const what = document.createElement('p');
-            const whereText = random('string');
-            const whatText = random('string');
+            let where = document.createElement('div');
+            let what = document.createElement('p');
+            let whereText = random('string');
+            let whatText = random('string');
 
             where.innerHTML = `, <b>${whereText}</b>!`;
-            what.textContent = whatText;
+            what.innerText = whatText;
 
             prepend(what, where);
 
-            expect(where.firstChild).toBe(what);
-            expect(where.innerHTML).toBe(`<p>${whatText}</p>, <b>${whereText}</b>!`);
+            assert.equal(where.firstChild, what);
+            assert.equal(where.innerHTML, `<p>${whatText}</p>, <b>${whereText}</b>!`);
         });
     });
 
     describe('findAllPSiblings', () => {
         it('должна возвращать массив с элементами, соседями которых являются P', () => {
-            const where = document.createElement('div');
+            let where = document.createElement('div');
+            let result;
 
             where.innerHTML = '<div></div><p></p><span></span><span></span><p></p>';
-            const result = findAllPSiblings(where);
+            result = findAllPSiblings(where);
 
-            expect(Array.isArray(result));
-            expect(result).toEqual([where.children[0], where.children[3]]);
+            assert.isTrue(Array.isArray(result));
+            assert.deepEqual(result, [where.children[0], where.children[3]]);
         });
     });
 
     describe('findError', () => {
         it('должна возвращать массив из текстового содержимого элементов', () => {
-            const where = document.createElement('div');
-            const text1 = random('string');
-            const text2 = random('string');
+            let where = document.createElement('div');
+            let text1 = random('string');
+            let text2 = random('string');
+            let result;
 
             where.innerHTML = ` <div>${text1}</div>, <div>${text2}</div>!!!`;
-            const result = findError(where);
+            result = findError(where);
 
-            expect(Array.isArray(result));
-            expect(result).toEqual([text1, text2]);
+            assert.isTrue(Array.isArray(result));
+            assert.deepEqual(result, [text1, text2]);
         });
     });
 
     describe('deleteTextNodes', () => {
         it('должна удалить все текстовые узлы', () => {
-            const where = document.createElement('div');
+            let where = document.createElement('div');
 
             where.innerHTML = ` <div></div>${random('string')}<p></p>${random('string')}`;
             deleteTextNodes(where);
 
-            expect(where.innerHTML).toBe('<div></div><p></p>');
+            assert.equal(where.innerHTML, '<div></div><p></p>');
         });
     });
 
     describe('deleteTextNodesRecursive', () => {
         it('должна рекурсивно удалить все текстовые узлы', () => {
-            const where = document.createElement('div');
-            const text1 = random('string');
-            const text2 = random('string');
-            const text3 = random('string');
+            let where = document.createElement('div');
+            let text1 = random('string');
+            let text2 = random('string');
+            let text3 = random('string');
 
             where.innerHTML = `<span> <div> <b>${text1}</b> </div> <p>${text2}</p> ${text3}</span>`;
             deleteTextNodesRecursive(where);
 
-            expect(where.innerHTML).toBe('<span><div><b></b></div><p></p></span>');
+            assert.equal(where.innerHTML, '<span><div><b></b></div><p></p></span>');
         });
     });
 
     describe('collectDOMStat', () => {
         it('должна вернуть статистику по переданному дереву', () => {
-            const where = document.createElement('div');
-            const class1 = `class-${random('number')}`;
-            const class2 = `class-${random('number')}-${random('number')}`;
-            const text1 = random('string');
-            const text2 = random('string');
-            const stat = {
+            let where = document.createElement('div');
+            let class1 = `class-${random('number')}`;
+            let class2 = `class-${random('number')}-${random('number')}`;
+            let text1 = random('string');
+            let text2 = random('string');
+            let stat = {
                 tags: { P: 1, B: 2 },
                 classes: { [class1]: 2, [class2]: 1 },
-                texts: 3,
+                texts: 3
             };
+            let result;
 
             where.innerHTML = `<p class="${class1}"><b>${text1}</b> <b class="${class1} ${class2}">${text2}</b></p>`;
-            const result = collectDOMStat(where);
-
-            expect(result).toEqual(stat);
+            result = collectDOMStat(where);
+            assert.deepEqual(result, stat);
         });
     });
 
     describe('observeChildNodes', () => {
-        it('должна вызывать fn при добавлении элементов в указанный элемент', (done) => {
-            const where = document.createElement('div');
-            const fn = (info) => {
-                expect(typeof info === 'object' && info && info.constructor === 'Object');
-                expect(info.type).toBe(targetInfo.type);
-                expect(Array.isArray(info.nodes));
-                expect(info.nodes.length).toBe(targetInfo.nodes.length);
-                expect(targetInfo.nodes).toEqual(info.nodes);
+        it('должна вызывать fn при добавлении элементов в указанный элемент', done => {
+            let where = document.createElement('div');
+            let fn = info => {
+                assert.isObject(info, 'info должен быть объектом');
+                assert.equal(info.type, targetInfo.type, `info.type должен быть равен ${targetInfo.type}`);
+                assert.isTrue(Array.isArray(info.nodes), 'info.nodes должен быть массивом');
+                assert.equal(info.nodes.length, targetInfo.nodes.length, 'некорректный размер info.nodes');
+                assert.deepEqual(targetInfo.nodes, info.nodes);
                 done();
             };
-            const elementToInsert = document.createElement('div');
-            const targetInfo = {
+            let elementToInsert = document.createElement('div');
+            let targetInfo = {
                 type: 'insert',
-                nodes: [elementToInsert],
+                nodes: [elementToInsert]
             };
 
             document.body.appendChild(where);
@@ -151,24 +154,24 @@ describe('ДЗ 4 - Работа с DOM', () => {
             document.body.removeChild(where);
         });
 
-        it('должна вызывать fn при добавлении множества элементов в указанный элемент', (done) => {
-            const where = document.createElement('div');
-            const fn = (info) => {
-                expect(typeof info === 'object' && info && info.constructor === 'Object');
-                expect(info.type).toBe(targetInfo.type);
-                expect(Array.isArray(info.nodes));
-                expect(info.nodes.length).toBe(targetInfo.nodes.length);
-                expect(targetInfo.nodes).toEqual(info.nodes);
+        it('должна вызывать fn при добавлении множества элементов в указанный элемент', done => {
+            let where = document.createElement('div');
+            let fn = info => {
+                assert.isObject(info, 'info должен быть объектом');
+                assert.equal(info.type, targetInfo.type, `info.type должен быть равен ${targetInfo.type}`);
+                assert.isTrue(Array.isArray(info.nodes), 'info.nodes должен быть массивом');
+                assert.equal(info.nodes.length, targetInfo.nodes.length, 'некорректный размер info.nodes');
+                assert.deepEqual(targetInfo.nodes, info.nodes);
                 done();
             };
-            const elementToInsert1 = document.createElement('div');
-            const elementToInsert2 = document.createElement('div');
-            const elementToInsert3 = document.createElement('div');
-            const targetInfo = {
+            let elementToInsert1 = document.createElement('div');
+            let elementToInsert2 = document.createElement('div');
+            let elementToInsert3 = document.createElement('div');
+            let targetInfo = {
                 type: 'insert',
-                nodes: [elementToInsert1, elementToInsert2, elementToInsert3],
+                nodes: [elementToInsert1, elementToInsert2, elementToInsert3]
             };
-            const fragment = new DocumentFragment();
+            let fragment = new DocumentFragment();
 
             document.body.appendChild(where);
 
@@ -182,20 +185,20 @@ describe('ДЗ 4 - Работа с DOM', () => {
             document.body.removeChild(where);
         });
 
-        it('должна вызывать fn при удалении элементов из указанного элемента', (done) => {
-            const where = document.createElement('div');
-            const fn = (info) => {
-                expect(typeof info === 'object' && info && info.constructor === 'Object');
-                expect(info.type).toBe(targetInfo.type);
-                expect(Array.isArray(info.nodes));
-                expect(info.nodes.length).toBe(targetInfo.nodes.length);
-                expect(targetInfo.nodes).toEqual(info.nodes);
+        it('должна вызывать fn при удалении элементов из указанного элемента', done => {
+            let where = document.createElement('div');
+            let fn = info => {
+                assert.isObject(info, 'info должен быть объектом');
+                assert.equal(info.type, targetInfo.type, `info.type должен быть равен ${targetInfo.type}`);
+                assert.isTrue(Array.isArray(info.nodes), 'info.nodes должен быть массивом');
+                assert.equal(info.nodes.length, targetInfo.nodes.length, 'некорректный размер info.nodes');
+                assert.deepEqual(targetInfo.nodes, info.nodes);
                 done();
             };
-            const elementToRemove = document.createElement('div');
-            const targetInfo = {
+            let elementToRemove = document.createElement('div');
+            let targetInfo = {
                 type: 'remove',
-                nodes: [elementToRemove],
+                nodes: [elementToRemove]
             };
 
             document.body.appendChild(where);
@@ -207,22 +210,22 @@ describe('ДЗ 4 - Работа с DOM', () => {
             document.body.removeChild(where);
         });
 
-        it('должна вызывать fn при удалении множества элементов из указанного элемента', (done) => {
-            const where = document.createElement('div');
-            const fn = (info) => {
-                expect(typeof info === 'object' && info && info.constructor === 'Object');
-                expect(info.type).toBe(targetInfo.type);
-                expect(Array.isArray(info.nodes));
-                expect(info.nodes.length).toBe(targetInfo.nodes.length);
-                expect(targetInfo.nodes).toEqual(info.nodes);
+        it('должна вызывать fn при удалении множества элементов из указанного элемента', done => {
+            let where = document.createElement('div');
+            let fn = info => {
+                assert.isObject(info, 'info должен быть объектом');
+                assert.equal(info.type, targetInfo.type, `info.type должен быть равен ${targetInfo.type}`);
+                assert.isTrue(Array.isArray(info.nodes), 'info.nodes должен быть массивом');
+                assert.equal(info.nodes.length, targetInfo.nodes.length, 'некорректный размер info.nodes');
+                assert.deepEqual(targetInfo.nodes, info.nodes);
                 done();
             };
-            const elementToRemove1 = document.createElement('div');
-            const elementToRemove2 = document.createElement('div');
-            const elementToRemove3 = document.createElement('div');
-            const targetInfo = {
+            let elementToRemove1 = document.createElement('div');
+            let elementToRemove2 = document.createElement('div');
+            let elementToRemove3 = document.createElement('div');
+            let targetInfo = {
                 type: 'remove',
-                nodes: [elementToRemove1, elementToRemove2, elementToRemove3],
+                nodes: [elementToRemove1, elementToRemove2, elementToRemove3]
             };
 
             document.body.appendChild(where);
